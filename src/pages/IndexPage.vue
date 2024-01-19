@@ -65,25 +65,39 @@
           </q-tr>
         </template>
       </q-table>
-      <q-dialog v-model="isDialogOpen">
-        <q-card>
+      <q-dialog v-model="isDialogOpen" class="full-width">
+        <q-card class="full-width">
           <q-card-section>
             <div class="text-h6">
               {{ isEditMode ? "Edit Contact" : "Add Contact" }}
             </div>
           </q-card-section>
-
-          <q-card-section>
-            <q-input v-model="contactForm.firstName" label="First Name" />
-            <q-input v-model="contactForm.lastName" label="Last Name" />
-            <q-input v-model="contactForm.email" label="Email" />
-            <q-input v-model="contactForm.phone" label="Phone" />
-          </q-card-section>
-
-          <q-card-actions align="right">
-            <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
-            <q-btn flat label="Save" color="primary" @click="saveContact" />
-          </q-card-actions>
+          <q-form class="q-gutter-md" @submit="saveContact">
+            <q-card-section>
+              <q-input
+                v-model="contactForm.firstName"
+                label="First Name"
+                :rules="[(val) => !!val || 'First name is required']"
+              />
+              <q-input
+                v-model="contactForm.lastName"
+                label="Last Name"
+                :rules="[(val) => !!val || 'First name is required']"
+              />
+              <!--  email input validation -->
+              <q-input v-model="contactForm.email" label="Email" type="email" />
+              <!-- validate 9 digit phone -->
+              <q-input
+                v-model="contactForm.phone"
+                label="Phone"
+                mask="(###) ###-####"
+              />
+            </q-card-section>
+            <q-card-actions align="right">
+              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+              <q-btn flat label="Save" color="primary" type="submit" />
+            </q-card-actions>
+          </q-form>
         </q-card>
       </q-dialog>
     </div>
@@ -183,7 +197,6 @@ export default defineComponent({
       }
     };
     const deleteRow = async (rowId) => {
-      console.log("Deleting row", rowId);
       try {
         await deleteContact(rowId);
         rows.value = rows.value.filter((row) => row.id !== rowId);
@@ -228,7 +241,6 @@ export default defineComponent({
       if (!search.value) {
         return rows.value;
       }
-      // search by first and/or last name
       const term = search.value.toLowerCase();
       return rows.value.filter(
         (row) =>

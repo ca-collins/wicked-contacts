@@ -78,6 +78,32 @@ function getContacts(reverseOrder, callback) {
   };
 }
 
+function updateContact(id, contact, callback) {
+  let tx = db.transaction([dbStoreNameStr], "readwrite");
+  let store = tx.objectStore(dbStoreNameStr);
+
+  // only update fields that are not undefined
+  let req = store.get(id);
+  req.onsuccess = function (event) {
+    let data = event.target.result;
+    applyUpdates(data, contact);
+    store.put(data, id);
+  };
+
+  tx.oncomplete = callback;
+  tx.onerror = function (event) {
+    alert("error updating contact " + event.target.errorCode);
+  };
+}
+
+function applyUpdates(original, updates) {
+  for (let key in updates) {
+    if (updates.hasOwnProperty(key) && updates[key] !== undefined) {
+      original[key] = updates[key];
+    }
+  }
+}
+
 function deleteContact(id, callback) {
   let tx = db.transaction([dbStoreNameStr], "readwrite");
   let store = tx.objectStore(dbStoreNameStr);
@@ -90,4 +116,10 @@ function deleteContact(id, callback) {
   };
 }
 
-module.exports = { setupDB, addContact, getContacts, deleteContact };
+module.exports = {
+  setupDB,
+  addContact,
+  getContacts,
+  updateContact,
+  deleteContact,
+};

@@ -3,6 +3,7 @@ let {
   setupDB,
   addContact,
   getContacts,
+  updateContact,
   deleteContact,
 } = require("../src/services/db");
 
@@ -13,9 +14,9 @@ const contact1 = {
   phone: "1234567890",
 };
 const contact2 = {
-  firstName: "Samwise",
-  lastName: "Gamgee",
-  email: "therealmvp@fellowship.org",
+  firstName: "Gandalf",
+  lastName: "the Grey",
+  email: "thegreypilgrim@fellowship.org",
   phone: "0987654321",
 };
 
@@ -51,6 +52,18 @@ describe("Contacts Database Tests", () => {
       addContact(contact2, function () {
         getContacts(true, function (contacts) {
           expect(contacts).toEqual([contact2, contact1]);
+          done();
+        });
+      });
+    });
+  });
+
+  test("we can update a contact", function (done) {
+    addContact(contact2, function () {
+      updateContact(1, { lastName: "the White" }, function () {
+        getContacts(false, function (contacts) {
+          console.log("contacts>>", contacts);
+          expect(contacts).toEqual([{ ...contact2, lastName: "the White" }]);
           done();
         });
       });

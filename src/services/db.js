@@ -116,10 +116,4 @@ function deleteContact(id, callback) {
   };
 }
 
-module.exports = {
-  setupDB,
-  addContact,
-  getContacts,
-  updateContact,
-  deleteContact,
-};
+export { setupDB, addContact, getContacts, updateContact, deleteContact };

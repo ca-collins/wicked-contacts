@@ -15,12 +15,7 @@
         <template v-slot:top="props">
           <div class="row full-width justify-between items-center">
             <div class="q-table__title">Contacts</div>
-            <q-btn
-              color="primary"
-              label="Contact"
-              icon="add"
-              @click="addContact"
-            />
+            <q-btn color="primary" label="Contact" icon="add" @click="addRow" />
           </div>
           <q-input
             v-model="search"
@@ -99,6 +94,7 @@
 
 <script>
 import { defineComponent, ref, computed } from "vue";
+import { addContact, getContacts } from "src/services/db.js";
 
 export default defineComponent({
   name: "IndexPage",
@@ -146,22 +142,7 @@ export default defineComponent({
       },
     ];
 
-    const rows = [
-      {
-        id: 1,
-        firstName: "Frodo",
-        lastName: "Baggins",
-        email: "frodo@test.com",
-        phone: "555-555-5555",
-      },
-      {
-        id: 2,
-        firstName: "Gandalf",
-        lastName: "The Grey",
-        email: "gandalf@test.com",
-        phone: "555-555-5555",
-      },
-    ];
+    const rows = ref([]);
 
     const deleteRow = (row) => {
       console.log("Deleting row:", row);
@@ -170,15 +151,28 @@ export default defineComponent({
       // Or make an API call to delete the row from the server
     };
 
+    const addRow = () => {
+      console.log("Adding row");
+      addContact({
+        firstName: "New",
+        lastName: "Contact",
+        email: "new@test.com",
+        phone: "555-555-5555",
+      });
+      // Implement the logic to add a new row
+      // For example, you might want to add a new row to your 'rows' array
+      // Or make an API call to add the row to the server
+    };
+
     const search = ref("");
 
     const filteredRows = computed(() => {
       if (!search.value) {
-        return rows;
+        return rows.value;
       }
       // search by first and/or last name
       const term = search.value.toLowerCase();
-      return rows.filter(
+      return rows.value.filter(
         (row) =>
           row.firstName.toLowerCase().includes(term) ||
           row.lastName.toLowerCase().includes(term)
@@ -195,6 +189,7 @@ export default defineComponent({
     return {
       rows,
       columns,
+      addRow,
       deleteRow,
       pagination,
       search,

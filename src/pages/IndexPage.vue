@@ -8,7 +8,7 @@
         binary-state-sort
         class="full-width"
         flat
-        no-data-label="No contacts found."
+        no-data-label="No contacts found"
         row-key="id"
         title="Contacts"
       >
@@ -84,13 +84,19 @@
                 label="Last Name"
                 :rules="[(val) => !!val || 'First name is required']"
               />
-              <!--  email input validation -->
-              <q-input v-model="contactForm.email" label="Email" type="email" />
-              <!-- validate 9 digit phone -->
+              <q-input
+                v-model="contactForm.email"
+                label="Email"
+                type="email"
+                :rules="[
+                  (val) => /.+@.+\..+/.test(val) || 'Email must be valid',
+                ]"
+              />
               <q-input
                 v-model="contactForm.phone"
                 label="Phone"
                 mask="(###) ###-####"
+                :rules="[(val) => val.length === 14 || 'Phone must be valid']"
               />
             </q-card-section>
             <q-card-actions align="right">

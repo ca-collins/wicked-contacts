@@ -78,4 +78,16 @@ function getContacts(reverseOrder, callback) {
   };
 }
 
-module.exports = { setupDB, addContact, getContacts };
+function deleteContact(id, callback) {
+  let tx = db.transaction([dbStoreNameStr], "readwrite");
+  let store = tx.objectStore(dbStoreNameStr);
+
+  store.delete(id);
+
+  tx.oncomplete = callback;
+  tx.onerror = function (event) {
+    alert("error deleting contact " + event.target.errorCode);
+  };
+}
+
+module.exports = { setupDB, addContact, getContacts, deleteContact };

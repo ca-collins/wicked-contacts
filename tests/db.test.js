@@ -1,5 +1,10 @@
 require("fake-indexeddb/auto");
-let { setupDB, addContact, getContacts } = require("../src/services/db");
+let {
+  setupDB,
+  addContact,
+  getContacts,
+  deleteContact,
+} = require("../src/services/db");
 
 const contact1 = {
   firstName: "Frodo",
@@ -47,6 +52,19 @@ describe("Contacts Database Tests", () => {
         getContacts(true, function (contacts) {
           expect(contacts).toEqual([contact2, contact1]);
           done();
+        });
+      });
+    });
+  });
+
+  test("we can delete a contact", function (done) {
+    addContact(contact1, function () {
+      addContact(contact2, function () {
+        deleteContact(1, function () {
+          getContacts(false, function (contacts) {
+            expect(contacts).toEqual([contact2]);
+            done();
+          });
         });
       });
     });

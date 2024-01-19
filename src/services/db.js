@@ -3,105 +3,110 @@ let dbNamespace;
 let dbNameStr = "wickedContacts";
 let dbStoreNameStr = "contacts";
 
-function setupDB(callback, namespace = dbNameStr) {
-  if (namespace != dbNamespace) {
-    db = null;
-  }
-  dbNamespace = namespace;
-
-  if (db) {
-    callback();
-    return;
-  }
-
-  let dbName = namespace == "" ? dbNameStr : dbNameStr + "_" + namespace;
-  let dbReq = indexedDB.open(dbName, 2);
-
-  dbReq.onupgradeneeded = function (event) {
-    db = event.target.result;
-
-    let contacts;
-    if (!db.objectStoreNames.contains(dbStoreNameStr)) {
-      contacts = db.createObjectStore(dbStoreNameStr, { autoIncrement: true });
-    } else {
-      contacts = dbReq.transaction.objectStore(dbStoreNameStr);
+function setupDB() {
+  return new Promise((resolve, reject) => {
+    if (db) {
+      resolve(db);
+      return;
     }
-  };
 
-  dbReq.onsuccess = function (event) {
-    db = event.target.result;
-    callback();
-  };
+    let dbName = dbNameStr;
+    let dbReq = indexedDB.open(dbName, 2);
 
-  dbReq.onerror = function (event) {
-    alert("error opening database " + event.target.errorCode);
-  };
-}
-
-function addContact(contact, callback) {
-  let tx = db.transaction([dbStoreNameStr], "readwrite");
-  let store = tx.objectStore(dbStoreNameStr);
-
-  let request = store.add({
-    firstName: contact.firstName,
-    lastName: contact.lastName,
-    email: contact.email,
-    phone: contact.phone,
-  });
-
-  request.onsuccess = function (event) {
-    // Get the ID of the newly added contact
-    const id = event.target.result;
-    // Now retrieve the full contact object
-    store.get(id).onsuccess = function (event) {
-      callback(event.target.result); // Return the full contact object
+    dbReq.onupgradeneeded = function (event) {
+      db = event.target.result;
+      if (!db.objectStoreNames.contains(dbStoreNameStr)) {
+        db.createObjectStore(dbStoreNameStr, { autoIncrement: true });
+      }
     };
-  };
 
-  request.onerror = function (event) {
-    alert("error storing contact " + event.target.errorCode);
-  };
+    dbReq.onsuccess = function (event) {
+      db = event.target.result;
+      resolve(db);
+    };
+
+    dbReq.onerror = function (event) {
+      reject("error opening database " + event.target.errorCode);
+    };
+  });
 }
 
-function getContacts(reverseOrder, callback) {
-  let tx = db.transaction([dbStoreNameStr], "readonly");
+function addContact(contact) {
+  return new Promise((resolve, reject) => {
+    let tx = db.transaction([dbStoreNameStr], "readwrite");
+    let store = tx.objectStore(dbStoreNameStr);
 
-  let store = tx.objectStore(dbStoreNameStr);
-  let req = store.openCursor(null, reverseOrder ? "prev" : "next");
+    let request = store.add({
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      email: contact.email,
+      phone: contact.phone,
+    });
 
-  let allContacts = [];
-  req.onsuccess = function (event) {
-    let cursor = event.target.result;
+    request.onsuccess = function (event) {
+      const id = event.target.result;
+      store.get(id).onsuccess = function (event) {
+        contact = event.target.result;
+        contact.id = id;
+        resolve(contact); // Resolve with the full contact object
+      };
+    };
 
-    if (cursor != null) {
-      allContacts.push(cursor.value);
-      cursor.continue();
-    } else {
-      callback(allContacts);
-    }
-  };
-
-  req.onerror = function (event) {
-    alert("error in cursor request " + event.target.errorCode);
-  };
+    request.onerror = function (event) {
+      reject("error storing contact " + event.target.errorCode);
+    };
+  });
 }
 
-function updateContact(id, contact, callback) {
-  let tx = db.transaction([dbStoreNameStr], "readwrite");
-  let store = tx.objectStore(dbStoreNameStr);
+function getContacts(reverseOrder) {
+  return new Promise((resolve, reject) => {
+    let tx = db.transaction([dbStoreNameStr], "readonly");
+    let store = tx.objectStore(dbStoreNameStr);
+    let req = store.openCursor(null, reverseOrder ? "prev" : "next");
 
-  // only update fields that are not undefined
-  let req = store.get(id);
-  req.onsuccess = function (event) {
-    let data = event.target.result;
-    applyUpdates(data, contact);
-    store.put(data, id);
-  };
+    let allContacts = [];
+    req.onsuccess = function (event) {
+      let cursor = event.target.result;
 
-  tx.oncomplete = callback;
-  tx.onerror = function (event) {
-    alert("error updating contact " + event.target.errorCode);
-  };
+      if (cursor != null) {
+        let contact = cursor.value;
+        contact.id = cursor.key;
+        allContacts.push(cursor.value);
+        cursor.continue();
+      } else {
+        resolve(allContacts);
+      }
+    };
+
+    req.onerror = function (event) {
+      reject("error in cursor request " + event.target.errorCode);
+    };
+  });
+}
+
+function updateContact(id, updatedContact) {
+  return new Promise((resolve, reject) => {
+    let tx = db.transaction([dbStoreNameStr], "readwrite");
+    let store = tx.objectStore(dbStoreNameStr);
+
+    let req = store.get(id);
+    req.onsuccess = function (event) {
+      let existingContact = event.target.result;
+      if (existingContact) {
+        // Apply updates to the existing contact
+        applyUpdates(existingContact, updatedContact);
+        store.put(existingContact, id).onsuccess = function () {
+          resolve(existingContact); // Resolve with the updated contact
+        };
+      } else {
+        reject("Contact not found");
+      }
+    };
+
+    req.onerror = function (event) {
+      reject("error updating contact " + event.target.errorCode);
+    };
+  });
 }
 
 function applyUpdates(original, updates) {
@@ -112,16 +117,21 @@ function applyUpdates(original, updates) {
   }
 }
 
-function deleteContact(id, callback) {
-  let tx = db.transaction([dbStoreNameStr], "readwrite");
-  let store = tx.objectStore(dbStoreNameStr);
+function deleteContact(id) {
+  return new Promise((resolve, reject) => {
+    let tx = db.transaction([dbStoreNameStr], "readwrite");
+    let store = tx.objectStore(dbStoreNameStr);
 
-  store.delete(id);
+    let request = store.delete(id);
 
-  tx.oncomplete = callback;
-  tx.onerror = function (event) {
-    alert("error deleting contact " + event.target.errorCode);
-  };
+    request.onsuccess = function () {
+      resolve(); // Resolving without a value, as delete doesn't return a value
+    };
+
+    request.onerror = function (event) {
+      reject("error deleting contact " + event.target.errorCode);
+    };
+  });
 }
 
 export { setupDB, addContact, getContacts, updateContact, deleteContact };

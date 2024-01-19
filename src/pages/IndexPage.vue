@@ -12,10 +12,15 @@
         row-key="id"
         title="Contacts"
       >
-        <template v-slot:top="props">
+        <template v-slot:top>
           <div class="row full-width justify-between items-center">
             <div class="q-table__title">Contacts</div>
-            <q-btn color="primary" label="Contact" icon="add" @click="addRow" />
+            <q-btn
+              color="primary"
+              label="Contact"
+              icon="add"
+              @click="openAddDialog"
+            />
           </div>
           <q-input
             v-model="search"
@@ -26,61 +31,33 @@
             style="width: 200px"
             class="q-mt-md"
           />
-
+        </template>
+        <template v-slot:body="props">
           <q-tr :props="props">
             <q-td key="firstName" :props="props">
               {{ props.row.firstName }}
-              <q-popup-edit v-model="props.row.firstName" v-slot="scope">
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  autofocus
-                  counter
-                  @keyup.enter="scope.set"
-                ></q-input>
-              </q-popup-edit>
             </q-td>
             <q-td key="lastName" :props="props">
               {{ props.row.lastName }}
-              <q-popup-edit v-model="props.row.lastName" v-slot="scope">
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  autofocus
-                  counter
-                  @keyup.enter="scope.set"
-                ></q-input>
-              </q-popup-edit>
             </q-td>
             <q-td key="email" :props="props">
               {{ props.row.email }}
-              <q-popup-edit v-model="props.row.email" v-slot="scope">
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  autofocus
-                  counter
-                  @keyup.enter="scope.set"
-                ></q-input>
-              </q-popup-edit>
             </q-td>
             <q-td key="phone" :props="props">
               {{ props.row.phone }}
-              <q-popup-edit v-model="props.row.phone" v-slot="scope">
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  autofocus
-                  counter
-                  @keyup.enter="scope.set"
-                ></q-input>
-              </q-popup-edit>
             </q-td>
             <q-td key="actions" :props="props">
               <q-btn
+                color="primary"
+                icon="edit"
+                round
+                flat
+                @click="openEditDialog(props.row)"
+              />
+              <q-btn
                 color="negative"
                 icon="delete"
-                @click="deleteRow(props.row)"
+                @click="deleteRow(props.row.id)"
                 round
                 flat
               />
@@ -88,17 +65,52 @@
           </q-tr>
         </template>
       </q-table>
+      <q-dialog v-model="isDialogOpen">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">
+              {{ isEditMode ? "Edit Contact" : "Add Contact" }}
+            </div>
+          </q-card-section>
+
+          <q-card-section>
+            <q-input v-model="contactForm.firstName" label="First Name" />
+            <q-input v-model="contactForm.lastName" label="Last Name" />
+            <q-input v-model="contactForm.email" label="Email" />
+            <q-input v-model="contactForm.phone" label="Phone" />
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+            <q-btn flat label="Save" color="primary" @click="saveContact" />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </div>
   </q-page>
 </template>
 
 <script>
-import { defineComponent, ref, computed, onMounted } from "vue";
-import { setupDB, addContact, getContacts } from "src/services/db.js";
+import { defineComponent, ref, computed, onMounted, reactive } from "vue";
+import {
+  addContact,
+  getContacts,
+  updateContact,
+  deleteContact,
+} from "src/services/db.js";
 
 export default defineComponent({
   name: "IndexPage",
   setup() {
+    const isDialogOpen = ref(false);
+    const isEditMode = ref(false);
+    const contactForm = reactive({
+      id: null,
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+    });
     const columns = [
       {
         name: "firstName",
@@ -141,36 +153,76 @@ export default defineComponent({
         sortable: false,
       },
     ];
+    const search = ref("");
+    const pagination = ref({
+      sortBy: "firstName",
+      descending: false,
+      page: 1,
+      rowsPerPage: 10,
+    });
 
     const rows = ref([]);
 
-    const deleteRow = (row) => {
-      console.log("Deleting row:", row);
-      // Implement the logic to delete the row
-      // For example, you might want to remove the row from your 'rows' array
-      // Or make an API call to delete the row from the server
+    // --- ASYNC METHODS ---
+    const addRow = async (contactData) => {
+      try {
+        const newContact = await addContact(contactData);
+        rows.value.push(newContact);
+      } catch (error) {
+        console.error("Error adding contact:", error);
+      }
+    };
+    const updateRow = async (rowId, updatedData) => {
+      try {
+        const updatedContact = await updateContact(rowId, updatedData);
+        rows.value = rows.value.map((row) =>
+          row.id === rowId ? updatedContact : row
+        );
+      } catch (error) {
+        console.error("Error updating contact:", error);
+      }
+    };
+    const deleteRow = async (rowId) => {
+      console.log("Deleting row", rowId);
+      try {
+        await deleteContact(rowId);
+        rows.value = rows.value.filter((row) => row.id !== rowId);
+      } catch (error) {
+        console.error("Error deleting contact:", error);
+      }
     };
 
-    const addRow = async () => {
-      console.log("Adding row");
-      const tempContact = {
-        firstName: "aaaa!!",
-        lastName: "asdfasdf",
-        email: "new@test.com",
-        phone: "555-555-5555",
-      };
-      await setupDB(() => {
-        addContact(tempContact, (newContact) => {
-          console.log("newContact:", newContact);
-          rows.value.push(newContact);
-        });
+    // --- SYNC METHODS ---
+    const openAddDialog = () => {
+      isEditMode.value = false;
+      Object.assign(contactForm, {
+        id: null,
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
       });
+      isDialogOpen.value = true;
     };
 
-    // make above async
-    // const addRow = async () => {
+    const openEditDialog = (contact) => {
+      isEditMode.value = true;
+      Object.assign(contactForm, contact);
+      isDialogOpen.value = true;
+    };
 
-    const search = ref("");
+    const saveContact = async () => {
+      if (isEditMode.value) {
+        await updateRow(contactForm.id, contactForm);
+      } else {
+        await addRow(contactForm);
+      }
+      closeDialog();
+    };
+
+    const closeDialog = () => {
+      isDialogOpen.value = false;
+    };
 
     const filteredRows = computed(() => {
       if (!search.value) {
@@ -185,33 +237,31 @@ export default defineComponent({
       );
     });
 
-    const pagination = ref({
-      sortBy: "firstName",
-      descending: false,
-      page: 1,
-      rowsPerPage: 10,
-    });
-
+    // --- LIFE CYCLE HOOKS ---
     onMounted(async () => {
       try {
-        setupDB(() => {
-          getContacts(false, (contacts) => {
-            rows.value = contacts;
-          });
-        });
+        const contacts = await getContacts();
+        rows.value = contacts;
       } catch (error) {
         console.error("Error fetching contacts:", error);
       }
     });
 
     return {
-      rows,
-      columns,
       addRow,
+      closeDialog,
+      columns,
+      contactForm,
       deleteRow,
-      pagination,
-      search,
       filteredRows,
+      isDialogOpen,
+      isEditMode,
+      openAddDialog,
+      openEditDialog,
+      pagination,
+      rows,
+      saveContact,
+      search,
     };
   },
 });

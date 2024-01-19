@@ -26,7 +26,7 @@ describe("Contacts Database Tests", () => {
   beforeEach((done) => {
     // Generate a unique namespace for each test
     dbNamespace = "testdb_" + Date.now();
-    setupDB(dbNamespace, done);
+    setupDB(done, dbNamespace);
   });
 
   afterEach((done) => {

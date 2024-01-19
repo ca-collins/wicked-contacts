@@ -93,8 +93,8 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed } from "vue";
-import { addContact, getContacts } from "src/services/db.js";
+import { defineComponent, ref, computed, onMounted } from "vue";
+import { setupDB, addContact, getContacts } from "src/services/db.js";
 
 export default defineComponent({
   name: "IndexPage",
@@ -151,18 +151,24 @@ export default defineComponent({
       // Or make an API call to delete the row from the server
     };
 
-    const addRow = () => {
+    const addRow = async () => {
       console.log("Adding row");
-      addContact({
-        firstName: "New",
-        lastName: "Contact",
+      const tempContact = {
+        firstName: "aaaa!!",
+        lastName: "asdfasdf",
         email: "new@test.com",
         phone: "555-555-5555",
+      };
+      await setupDB(() => {
+        addContact(tempContact, (newContact) => {
+          console.log("newContact:", newContact);
+          rows.value.push(newContact);
+        });
       });
-      // Implement the logic to add a new row
-      // For example, you might want to add a new row to your 'rows' array
-      // Or make an API call to add the row to the server
     };
+
+    // make above async
+    // const addRow = async () => {
 
     const search = ref("");
 
@@ -184,6 +190,18 @@ export default defineComponent({
       descending: false,
       page: 1,
       rowsPerPage: 10,
+    });
+
+    onMounted(async () => {
+      try {
+        setupDB(() => {
+          getContacts(false, (contacts) => {
+            rows.value = contacts;
+          });
+        });
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+      }
     });
 
     return {

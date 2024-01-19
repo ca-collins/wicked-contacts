@@ -3,7 +3,7 @@ let dbNamespace;
 let dbNameStr = "wickedContacts";
 let dbStoreNameStr = "contacts";
 
-function setupDB(namespace, callback) {
+function setupDB(callback, namespace = dbNameStr) {
   if (namespace != dbNamespace) {
     db = null;
   }
@@ -42,15 +42,23 @@ function addContact(contact, callback) {
   let tx = db.transaction([dbStoreNameStr], "readwrite");
   let store = tx.objectStore(dbStoreNameStr);
 
-  store.add({
+  let request = store.add({
     firstName: contact.firstName,
     lastName: contact.lastName,
     email: contact.email,
     phone: contact.phone,
   });
 
-  tx.oncomplete = callback;
-  tx.onerror = function (event) {
+  request.onsuccess = function (event) {
+    // Get the ID of the newly added contact
+    const id = event.target.result;
+    // Now retrieve the full contact object
+    store.get(id).onsuccess = function (event) {
+      callback(event.target.result); // Return the full contact object
+    };
+  };
+
+  request.onerror = function (event) {
     alert("error storing contact " + event.target.errorCode);
   };
 }

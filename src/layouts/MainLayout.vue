@@ -23,7 +23,6 @@ export default defineComponent({
   name: "MainLayout",
 
   setup() {
-    // if in production, './' else '/'
     const imagePath = import.meta.env.PROD
       ? "./wicked-contacts-logo.png"
       : "/wicked-contacts-logo.png";

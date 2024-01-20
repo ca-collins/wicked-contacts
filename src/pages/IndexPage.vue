@@ -28,7 +28,7 @@
             dense
             debounce="300"
             placeholder="Search"
-            style="width: 200px"
+            style="width: 300px"
             class="q-mt-md"
           />
         </template>

@@ -3,12 +3,7 @@
     <q-header elevated>
       <q-toolbar>
         <!-- logo -->
-        <q-avatar
-          size="md"
-          square
-          class="q-mr-sm"
-          style="background-color: #f2f2f2"
-        >
+        <q-avatar size="md" square class="q-mr-sm">
           <img
             src="https://cdn.quasar.dev/logo/svg/quasar-logo.svg"
             alt="Quasar Logo"

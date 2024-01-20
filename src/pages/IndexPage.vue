@@ -6,7 +6,7 @@
         v-model:pagination="pagination"
         :rows="filteredRows"
         binary-state-sort
-        class="full-width q-pl-xl q-pr-xl"
+        class="full-width q-pl-xl q-pr-xl contact-table"
         flat
         no-data-label="No contacts found"
         row-key="id"
@@ -290,3 +290,11 @@ export default defineComponent({
   },
 });
 </script>
+<style>
+.contact-table {
+  th {
+    background-color: #f5f5f5;
+  }
+}
+</style>
+```

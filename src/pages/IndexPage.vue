@@ -1,20 +1,29 @@
 <template>
   <q-page class="flex">
-    <div class="full-width q-pl-lg q-pr-lg q-pt-lg">
+    <div class="full-width q-pl-xl q-pr-xl q-pt-lg">
       <q-table
         :columns="columns"
         v-model:pagination="pagination"
         :rows="filteredRows"
         binary-state-sort
-        class="full-width"
+        class="full-width q-pl-xl q-pr-xl"
         flat
         no-data-label="No contacts found"
         row-key="id"
         title="Contacts"
       >
         <template v-slot:top>
+          <div class="q-table__title">Contacts</div>
           <div class="row full-width justify-between items-center">
-            <div class="q-table__title">Contacts</div>
+            <q-input
+              v-model="search"
+              filled
+              dense
+              debounce="300"
+              placeholder="Search"
+              style="width: 300px"
+              class="q-mt-md"
+            />
             <q-btn
               color="primary"
               label="Contact"
@@ -22,15 +31,6 @@
               @click="openAddDialog"
             />
           </div>
-          <q-input
-            v-model="search"
-            filled
-            dense
-            debounce="300"
-            placeholder="Search"
-            style="width: 300px"
-            class="q-mt-md"
-          />
         </template>
         <template v-slot:body="props">
           <q-tr :props="props">
@@ -88,15 +88,21 @@
                 v-model="contactForm.email"
                 label="Email"
                 type="email"
-                :rules="[
-                  (val) => /.+@.+\..+/.test(val) || 'Email must be valid',
-                ]"
+                :rules="
+                  contactForm.email
+                    ? [(val) => /.+@.+\..+/.test(val) || 'Email must be valid']
+                    : []
+                "
               />
               <q-input
                 v-model="contactForm.phone"
                 label="Phone"
                 mask="(###) ###-####"
-                :rules="[(val) => val.length === 14 || 'Phone must be valid']"
+                :rules="
+                  contactForm.phone
+                    ? [(val) => val.length === 14 || 'Phone must be valid']
+                    : []
+                "
               />
             </q-card-section>
             <q-card-actions align="right">

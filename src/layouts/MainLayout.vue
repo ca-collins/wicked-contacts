@@ -1,15 +1,11 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
-      <q-toolbar>
-        <!-- logo -->
-        <q-avatar size="md" square class="q-mr-sm">
-          <img
-            src="https://cdn.quasar.dev/logo/svg/quasar-logo.svg"
-            alt="Quasar Logo"
-          />
+    <q-header elevated class="bg-white text-primary q-pt-sm q-pb-sm">
+      <q-toolbar class="q-pl-xl">
+        <q-avatar size="lg" square class="q-ml-xl">
+          <img src="src/assets/wicked-contacts-logo.png" alt="logo" />
         </q-avatar>
-        <q-toolbar-title>
+        <q-toolbar-title class="text-h4">
           <span style="font-weight: bold">Wicked</span>Contacts
         </q-toolbar-title>
       </q-toolbar>

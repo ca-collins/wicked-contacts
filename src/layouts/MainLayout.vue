@@ -3,7 +3,7 @@
     <q-header elevated class="bg-white text-primary q-pt-sm q-pb-sm">
       <q-toolbar class="q-pl-xl">
         <q-avatar size="lg" square class="q-ml-xl">
-          <img src="src/assets/wicked-contacts-logo.png" alt="logo" />
+          <img src="/wicked-contacts-logo.png" alt="logo" />
         </q-avatar>
         <q-toolbar-title class="text-h4">
           <span style="font-weight: bold">Wicked</span>Contacts

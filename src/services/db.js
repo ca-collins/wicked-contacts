@@ -58,20 +58,19 @@ function addContact(contact) {
   });
 }
 
-function getContacts(reverseOrder) {
+function getContacts() {
   return new Promise((resolve, reject) => {
     let tx = db.transaction([dbStoreNameStr], "readonly");
     let store = tx.objectStore(dbStoreNameStr);
-    let req = store.openCursor(null, reverseOrder ? "prev" : "next");
+    let req = store.openCursor();
 
     let allContacts = [];
     req.onsuccess = function (event) {
       let cursor = event.target.result;
-
-      if (cursor != null) {
+      if (cursor) {
         let contact = cursor.value;
         contact.id = cursor.key;
-        allContacts.push(cursor.value);
+        allContacts.push(contact);
         cursor.continue();
       } else {
         resolve(allContacts);

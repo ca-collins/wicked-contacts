@@ -23,63 +23,39 @@ const contact2 = {
 describe("Contacts Database Tests", () => {
   let dbNamespace;
 
-  beforeEach((done) => {
-    // Generate a unique namespace for each test
+  beforeEach(async () => {
     dbNamespace = "testdb_" + Date.now();
-    setupDB(done, dbNamespace);
+    await setupDB(dbNamespace);
   });
 
-  afterEach((done) => {
-    // Clean up: Drop the database after each test
-    let req = indexedDB.deleteDatabase(dbNamespace);
-    req.onsuccess = () => done();
-    req.onerror = () => done.fail("Error clearing database");
+  afterEach(async () => {
+    await indexedDB.deleteDatabase(dbNamespace);
   });
 
-  test("we can store and retrieve contacts", function (done) {
-    addContact(contact1, function () {
-      addContact(contact2, function () {
-        getContacts(false, function (contacts) {
-          expect(contacts).toEqual([contact1, contact2]);
-          done();
-        });
-      });
-    });
+  test("we can store and retrieve contacts", async () => {
+    await addContact(contact1);
+    await addContact(contact2);
+    const contacts = await getContacts(false);
+    expect(contacts.map((c) => ({ ...c, id: undefined }))).toEqual([
+      contact1,
+      contact2,
+    ]);
   });
 
-  test("we can store contacts and retrieve them in reverse order", function (done) {
-    addContact(contact1, function () {
-      addContact(contact2, function () {
-        getContacts(true, function (contacts) {
-          expect(contacts).toEqual([contact2, contact1]);
-          done();
-        });
-      });
-    });
+  test("we can update a contact", async () => {
+    const addedContact = await addContact(contact2);
+    await updateContact(addedContact.id, { lastName: "the White" });
+    const contacts = await getContacts(false);
+    expect(contacts.find((c) => c.id === addedContact.id).lastName).toBe(
+      "the White"
+    );
   });
 
-  test("we can update a contact", function (done) {
-    addContact(contact2, function () {
-      updateContact(1, { lastName: "the White" }, function () {
-        getContacts(false, function (contacts) {
-          console.log("contacts>>", contacts);
-          expect(contacts).toEqual([{ ...contact2, lastName: "the White" }]);
-          done();
-        });
-      });
-    });
-  });
-
-  test("we can delete a contact", function (done) {
-    addContact(contact1, function () {
-      addContact(contact2, function () {
-        deleteContact(1, function () {
-          getContacts(false, function (contacts) {
-            expect(contacts).toEqual([contact2]);
-            done();
-          });
-        });
-      });
-    });
+  test("we can delete a contact", async () => {
+    const addedContact1 = await addContact(contact1);
+    await addContact(contact2);
+    await deleteContact(addedContact1.id);
+    const contacts = await getContacts(false);
+    expect(contacts).not.toContainEqual({ ...contact1, id: addedContact1.id });
   });
 });

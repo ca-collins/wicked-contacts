@@ -1,41 +1,33 @@
-# WickedContacts (wicked-contacts)
+# WickedContacts
 
-A tech challenge for WickedFile
+### a tech challenge for WickedFile
 
-## Install the dependencies
-```bash
-yarn
-# or
-npm install
+**By Chris Collins ([ca-collins](https://github.com/ca-collins))**
+
+<br>
+
+Run the project:
+
+```
+npm run dev
 ```
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
-quasar dev
+<br>
+
+Run the tests:
+
+```
+npm run test
 ```
 
+<br>
 
-### Lint the files
-```bash
-yarn lint
-# or
-npm run lint
+Versions:
+
 ```
-
-
-### Format the files
-```bash
-yarn format
-# or
-npm run format
+Node:   v20.11.0
+NPM:    v10.3.0
+quasar: v2.14.2
+    app-vite:   v1.7.3
+    cli:        v2.3.0
 ```
-
-
-
-### Build the app for production
-```bash
-quasar build
-```
-
-### Customize the configuration
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).

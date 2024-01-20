@@ -15,6 +15,10 @@ _ChatGPT is the steadfast workhorse, tirelessly plowing through the field. It's 
 🎬 To Run the Project:
 
 ```
+npm install
+```
+
+```
 npm run dev
 ```
 
